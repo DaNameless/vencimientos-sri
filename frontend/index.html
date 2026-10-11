@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vencimientos SRI</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Vencimientos SRI</h1>
+      <p class="sub">Obligaciones tributarias mensuales por cliente</p>
+    </div>
+    <form id="form-generar" class="inline">
+      <label for="periodo">Período</label>
+      <input id="periodo" name="periodo" type="month" required>
+      <button type="submit">Generar obligaciones</button>
+    </form>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Resumen por cliente</h2>
+      <div class="table-wrap">
+        <table id="tabla-resumen">
+          <thead>
+            <tr><th>Cliente</th><th>RUC</th><th class="num">Por vencer</th><th class="num">Vencidas</th><th class="num">Presentadas</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Obligaciones</h2>
+        <select id="filtro-estado" aria-label="Filtrar por estado">
+          <option value="">Todas</option>
+          <option value="vencida">Vencidas</option>
+          <option value="pendiente">Por vencer</option>
+          <option value="presentada">Presentadas</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="tabla-obligaciones">
+          <thead>
+            <tr><th>Vence</th><th>Cliente</th><th>Tipo</th><th>Período</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Nuevo cliente</h2>
+      <form id="form-cliente" class="grid">
+        <label>RUC <input name="ruc" required pattern="\d{10}001" maxlength="13" placeholder="1799999910001"></label>
+        <label>Razón social <input name="razon_social" required minlength="3"></label>
+        <label>Email <input name="email" type="email" placeholder="opcional"></label>
+        <button type="submit">Crear cliente</button>
+      </form>
+      <p class="hint">Al crear un cliente se generan sus obligaciones del último mes cerrado.</p>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
