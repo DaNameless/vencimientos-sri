@@ -1,0 +1,24 @@
+// Paleta y medidas compartidas (SASS: una sola fuente para colores y espaciados).
+$bg: #f6f6f3;
+$card: #ffffff;
+$text: #1d1f22;
+$muted: #6b6f76;
+$line: #e3e3de;
+$accent: #1f4e79;
+$peligro: #b3261e;
+
+$estados: (
+  pendiente: (#fff3e0, #a35f00),
+  vencida: (#fdecea, $peligro),
+  presentada: (#e8f5ec, #2e7d4f),
+);
+
+$radius: 10px;
+$radius-sm: 6px;
+$movil: 600px;
+
+@mixin movil {
+  @media (max-width: $movil) {
+    @content;
+  }
+}

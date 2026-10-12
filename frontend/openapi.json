@@ -1,0 +1,646 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vencimientos SRI",
+    "description": "Seguimiento de obligaciones tributarias mensuales de clientes (Ecuador).",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/clientes": {
+      "get": {
+        "tags": [
+          "clientes"
+        ],
+        "summary": "Listar Clientes",
+        "operationId": "listar_clientes_api_clientes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Cliente"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Clientes Api Clientes Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "clientes"
+        ],
+        "summary": "Crear Cliente",
+        "description": "Crea el cliente y sus obligaciones del último período cerrado\nen UNA transacción: o se guarda todo, o no se guarda nada.",
+        "operationId": "crear_cliente_api_clientes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClienteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClienteCreado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clientes/resumen": {
+      "get": {
+        "tags": [
+          "clientes"
+        ],
+        "summary": "Resumen Por Cliente",
+        "description": "LEFT JOIN + GROUP BY: conteo de obligaciones por estado para cada cliente\n(incluye clientes sin obligaciones).",
+        "operationId": "resumen_por_cliente_api_clientes_resumen_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenCliente"
+                  },
+                  "type": "array",
+                  "title": "Response Resumen Por Cliente Api Clientes Resumen Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clientes/con-vencidas": {
+      "get": {
+        "tags": [
+          "clientes"
+        ],
+        "summary": "Clientes Con Vencidas",
+        "description": "Subconsulta correlacionada (EXISTS) para filtrar clientes con al menos una\nobligación vencida, y subconsultas escalares para el detalle.",
+        "operationId": "clientes_con_vencidas_api_clientes_con_vencidas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClienteConVencidas"
+                  },
+                  "type": "array",
+                  "title": "Response Clientes Con Vencidas Api Clientes Con Vencidas Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/obligaciones": {
+      "get": {
+        "tags": [
+          "obligaciones"
+        ],
+        "summary": "Listar Obligaciones",
+        "operationId": "listar_obligaciones_api_obligaciones_get",
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pendiente",
+                    "vencida",
+                    "presentada"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "cliente_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cliente Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Obligacion"
+                  },
+                  "title": "Response Listar Obligaciones Api Obligaciones Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/obligaciones/{obligacion_id}/presentar": {
+      "post": {
+        "tags": [
+          "obligaciones"
+        ],
+        "summary": "Marcar Presentada",
+        "description": "Transacción con bloqueo de fila (SELECT ... FOR UPDATE): evita que dos\nusuarios marquen la misma obligación a la vez y garantiza que el cambio de\nestado y el registro en bitácora se guarden juntos (o ninguno).",
+        "operationId": "marcar_presentada_api_obligaciones__obligacion_id__presentar_post",
+        "parameters": [
+          {
+            "name": "obligacion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Obligacion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Obligacion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/obligaciones/generar": {
+      "post": {
+        "tags": [
+          "obligaciones"
+        ],
+        "summary": "Generar Periodo",
+        "description": "Genera las obligaciones de un período para TODOS los clientes en una sola\ntransacción. INSERT IGNORE + la restricción UNIQUE la hacen idempotente:\nejecutarla dos veces no duplica nada.",
+        "operationId": "generar_periodo_api_obligaciones_generar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerarPeriodoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerarPeriodoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "sistema"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Cliente": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "ruc": {
+            "type": "string",
+            "title": "Ruc"
+          },
+          "razon_social": {
+            "type": "string",
+            "title": "Razon Social"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ruc",
+          "razon_social"
+        ],
+        "title": "Cliente"
+      },
+      "ClienteConVencidas": {
+        "properties": {
+          "cliente_id": {
+            "type": "integer",
+            "title": "Cliente Id"
+          },
+          "ruc": {
+            "type": "string",
+            "title": "Ruc"
+          },
+          "razon_social": {
+            "type": "string",
+            "title": "Razon Social"
+          },
+          "vencidas": {
+            "type": "integer",
+            "title": "Vencidas"
+          },
+          "vencida_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Vencida Desde"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cliente_id",
+          "ruc",
+          "razon_social",
+          "vencidas",
+          "vencida_desde"
+        ],
+        "title": "ClienteConVencidas"
+      },
+      "ClienteCreado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "ruc": {
+            "type": "string",
+            "title": "Ruc"
+          },
+          "razon_social": {
+            "type": "string",
+            "title": "Razon Social"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "obligaciones_generadas": {
+            "type": "integer",
+            "title": "Obligaciones Generadas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ruc",
+          "razon_social",
+          "obligaciones_generadas"
+        ],
+        "title": "ClienteCreado"
+      },
+      "ClienteIn": {
+        "properties": {
+          "ruc": {
+            "type": "string",
+            "title": "Ruc",
+            "examples": [
+              "1799999910001"
+            ]
+          },
+          "razon_social": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Razon Social"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ruc",
+          "razon_social"
+        ],
+        "title": "ClienteIn"
+      },
+      "GenerarPeriodoIn": {
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "title": "Periodo",
+            "examples": [
+              "2026-09"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "periodo"
+        ],
+        "title": "GenerarPeriodoIn"
+      },
+      "GenerarPeriodoOut": {
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "title": "Periodo"
+          },
+          "creadas": {
+            "type": "integer",
+            "title": "Creadas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "periodo",
+          "creadas"
+        ],
+        "title": "GenerarPeriodoOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Obligacion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "cliente_id": {
+            "type": "integer",
+            "title": "Cliente Id"
+          },
+          "razon_social": {
+            "type": "string",
+            "title": "Razon Social"
+          },
+          "ruc": {
+            "type": "string",
+            "title": "Ruc"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "tipo_nombre": {
+            "type": "string",
+            "title": "Tipo Nombre"
+          },
+          "periodo": {
+            "type": "string",
+            "title": "Periodo"
+          },
+          "fecha_vencimiento": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Vencimiento"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "presentada",
+              "vencida"
+            ],
+            "title": "Estado"
+          },
+          "dias_restantes": {
+            "type": "integer",
+            "title": "Dias Restantes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cliente_id",
+          "razon_social",
+          "ruc",
+          "tipo",
+          "tipo_nombre",
+          "periodo",
+          "fecha_vencimiento",
+          "estado",
+          "dias_restantes"
+        ],
+        "title": "Obligacion"
+      },
+      "ResumenCliente": {
+        "properties": {
+          "cliente_id": {
+            "type": "integer",
+            "title": "Cliente Id"
+          },
+          "ruc": {
+            "type": "string",
+            "title": "Ruc"
+          },
+          "razon_social": {
+            "type": "string",
+            "title": "Razon Social"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "presentadas": {
+            "type": "integer",
+            "title": "Presentadas"
+          },
+          "por_vencer": {
+            "type": "integer",
+            "title": "Por Vencer"
+          },
+          "vencidas": {
+            "type": "integer",
+            "title": "Vencidas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cliente_id",
+          "ruc",
+          "razon_social",
+          "total",
+          "presentadas",
+          "por_vencer",
+          "vencidas"
+        ],
+        "title": "ResumenCliente"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

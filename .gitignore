@@ -7,3 +7,11 @@ venv/
 .vscode/
 .idea/
 .DS_Store
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Pruebas de mutación
+mutants/
+.mutmut-cache

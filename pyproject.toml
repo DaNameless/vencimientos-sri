@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+# Pruebas de mutación (mutmut): se aplican a la regla de negocio pura,
+# que es donde un error silencioso (un día de vencimiento mal calculado) más duele.
+[tool.mutmut]
+source_paths = ["app/vencimientos.py"]
+also_copy = ["app/"]
+pytest_add_cli_args_test_selection = ["tests/test_vencimientos.py"]

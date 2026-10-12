@@ -1,0 +1,267 @@
+@use 'sass:list';
+@use 'variables' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: $bg;
+  color: $text;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// ---------------------------------------------------------------- Encabezado
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: $accent;
+  color: #fff;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+
+  &__sub {
+    margin: 0.2rem 0 0;
+    opacity: 0.85;
+    font-size: 0.9rem;
+  }
+
+  @include movil {
+    padding: 1rem;
+  }
+}
+
+.layout {
+  max-width: 1000px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+  display: grid;
+  // minmax(0, 1fr): la columna no crece con el contenido, así que las tablas
+  // anchas hacen scroll dentro de su tarjeta y no ensanchan la página en móvil.
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+// ---------------------------------------------------------------- Tarjetas y tablas
+.card {
+  background: $card;
+  border: 1px solid $line;
+  border-radius: $radius;
+  padding: 1rem 1.25rem;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+  }
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  // Contiene a los textos .sr-only (posición absoluta) de la tabla: sin esto,
+  // su posición dentro de la tabla ancha generaba scroll horizontal en móvil.
+  position: relative;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid $line;
+  vertical-align: top;
+}
+
+th {
+  color: $muted;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+td small {
+  display: block;
+  color: $muted;
+  font-size: 0.78rem;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.alerta {
+  color: $peligro;
+  font-weight: 700;
+}
+
+.vacio {
+  color: $muted;
+  text-align: center;
+  padding: 1rem;
+}
+
+// Un modificador por estado, generado desde el mapa $estados.
+.badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  @each $estado, $colores in $estados {
+    &--#{$estado} {
+      background: list.nth($colores, 1);
+      color: list.nth($colores, 2);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- Formularios
+.btn {
+  background: $accent;
+  color: #fff;
+  border: 0;
+  border-radius: $radius-sm;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #f2b705;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &--small {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  &--light {
+    background: #fff;
+    color: $accent;
+  }
+}
+
+input,
+select {
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+
+  &[aria-invalid='true'] {
+    border-color: $peligro;
+  }
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+
+  label {
+    font-size: 0.85rem;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+
+  label {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: $muted;
+  }
+
+  .btn {
+    align-self: end;
+  }
+}
+
+.error {
+  color: $peligro;
+  font-size: 0.78rem;
+}
+
+.hint {
+  color: $muted;
+  font-size: 0.82rem;
+  margin: 0.75rem 0 0;
+}
+
+// ---------------------------------------------------------------- Notificación
+.toast {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translate(-50%, 1rem);
+  background: $text;
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  opacity: 0;
+  transition: 0.2s;
+  pointer-events: none;
+  max-width: 90vw;
+
+  &--visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  &--error {
+    background: $peligro;
+  }
+}

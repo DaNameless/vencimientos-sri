@@ -17,6 +17,15 @@ def test_dia_segun_noveno_digito(ruc, dia):
     assert fecha_vencimiento_mensual(ruc, "2026-09") == date(2026, 10, dia)
 
 
+def test_tabla_completa_de_dias_por_noveno_digito():
+    """Los diez dígitos siguen el patrón del SRI: 1→10, 2→12, …, 9→26, 0→28.
+    mutmut no muta constantes de módulo, así que la tabla se verifica entera aquí."""
+    for d in range(10):
+        ruc = f"17999999{d}0001"
+        dia_esperado = 8 + 2 * (d if d else 10)
+        assert fecha_vencimiento_mensual(ruc, "2026-09").day == dia_esperado
+
+
 def test_periodo_diciembre_vence_en_enero_del_anio_siguiente():
     assert fecha_vencimiento_mensual("1799999910001", "2026-12") == date(2027, 1, 10)
 
